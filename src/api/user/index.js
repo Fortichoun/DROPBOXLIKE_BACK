@@ -1,13 +1,14 @@
-import { Router } from 'express'
-import { middleware as query } from 'querymen'
-import { middleware as body } from 'bodymen'
-import { master, token } from '../../services/passport'
-import { index, showMe, show, create, update, destroy } from './controller'
-import { schema } from '../../models/user.js'
-// export User, { schema } from './model'
+import { Router } from 'express';
+import { middleware as query } from 'querymen';
+import { middleware as body } from 'bodymen';
+import { master, token } from '../../services/passport';
+import { index, showMe, show, create, update, destroy } from './controller';
+import { schema } from '../../models/user';
 
-const router = new Router()
-const { email, name, picture, role } = schema.tree
+const router = new Router();
+const {
+  email, name, picture, role,
+} = schema.tree;
 
 /**
  * @api {get} /users Retrieve users
@@ -20,10 +21,12 @@ const { email, name, picture, role } = schema.tree
  * @apiError {Object} 400 Some parameters may contain invalid values.
  * @apiError 401 Admin access only.
  */
-router.get('/',
+router.get(
+  '/',
   token({ required: true, roles: ['admin'] }),
   query(),
-  index)
+  index,
+);
 
 /**
  * @api {get} /users/me Retrieve current user
@@ -33,9 +36,11 @@ router.get('/',
  * @apiParam {String} access_token User access_token.
  * @apiSuccess {Object} user User's data.
  */
-router.get('/me',
+router.get(
+  '/me',
   token({ required: true }),
-  showMe)
+  showMe,
+);
 
 /**
  * @api {get} /users/:id Retrieve user
@@ -45,8 +50,10 @@ router.get('/me',
  * @apiSuccess {Object} user User's data.
  * @apiError 404 User not found.
  */
-router.get('/:id',
-  show)
+router.get(
+  '/:id',
+  show,
+);
 
 /**
  * @api {post} /users Create user
@@ -63,10 +70,14 @@ router.get('/:id',
  * @apiError 401 Master access only.
  * @apiError 409 Email already registered.
  */
-router.post('/',
+router.post(
+  '/',
   master(),
-  body({ email, name, picture, role }),
-  create)
+  body({
+    email, name, picture, role,
+  }),
+  create,
+);
 
 /**
  * @api {put} /users/:id Update user
@@ -81,10 +92,12 @@ router.post('/',
  * @apiError 401 Current user or admin access only.
  * @apiError 404 User not found.
  */
-router.put('/:id',
+router.put(
+  '/:id',
   token({ required: true }),
   body({ name, picture }),
-  update)
+  update,
+);
 
 /**
  * @api {delete} /users/:id Delete user
@@ -96,8 +109,10 @@ router.put('/:id',
  * @apiError 401 Admin access only.
  * @apiError 404 User not found.
  */
-router.delete('/:id',
+router.delete(
+  '/:id',
   token({ required: true, roles: ['admin'] }),
-  destroy)
+  destroy,
+);
 
-export default router
+export default router;

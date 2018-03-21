@@ -1,30 +1,26 @@
-import { sign } from '../../services/jwt'
-import { success } from '../../services/response/'
-import User from '../../models/user'
+import { sign } from '../../services/jwt';
+import { success } from '../../services/response/';
+import User from '../../models/user';
 
-export const login = ({ body }, res, next) => {
+export const login = ({ body }, res, next) =>
   User.findOne({
-    email: body.email
-  }, function(err, user) {
+    email: body.email,
+  }, (err, user) => {
     if (err) throw err;
     if (!user) {
-      res.status(401).json({ message: 'Authentication failed. User not found.' });
-    } else if (user) {
-      if (user.password !== body.password) {
-        res.status(401).json({ message: 'Authentication failed. Wrong password.' });
-      } else {
-        return sign(user)
-          .then((token) => ({ token, user: user.view() }))
-          .then(success(res, 201))
-      }
+      return res.status(401).json({ message: 'Authentication failed. User not found.' });
     }
+    if (user.password !== body.password) {
+      return res.status(401).json({ message: 'Authentication failed. Wrong password.' });
+    }
+    return sign(user)
+      .then(token => ({ token, user: user.view() }))
+      .then(success(res, 201));
   }).catch(next);
-};
-
 
 export const register = ({ body }, res, next) =>
   User.create(body)
-    .then((user) => user.view(true))
+    .then(user => user.view(true))
     .then(success(res, 201))
     .catch((err) => {
       /* istanbul ignore else */
@@ -32,9 +28,9 @@ export const register = ({ body }, res, next) =>
         res.status(409).json({
           valid: false,
           param: 'email',
-          message: 'email already registered'
-        })
+          message: 'email already registered',
+        });
       } else {
-        next(err)
+        next(err);
       }
     });

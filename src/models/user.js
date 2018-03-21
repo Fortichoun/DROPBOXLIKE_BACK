@@ -1,7 +1,7 @@
-import crypto from 'crypto'
-import mongoose, { Schema } from 'mongoose'
-import mongooseKeywords from 'mongoose-keywords'
-import { encrypt, decrypt } from '../utils/cryptoTools'
+import crypto from 'crypto';
+import mongoose, { Schema } from 'mongoose';
+import mongooseKeywords from 'mongoose-keywords';
+import { encrypt, decrypt } from '../utils/cryptoTools';
 
 const roles = ['user', 'admin'];
 
@@ -12,85 +12,86 @@ const userSchema = new Schema({
     required: true,
     unique: true,
     trim: true,
-    lowercase: true
+    lowercase: true,
   },
   name: {
     type: String,
     index: true,
-    trim: true
+    trim: true,
   },
   password: String,
   services: {
-    github: String
+    github: String,
   },
   role: {
     type: String,
     enum: roles,
-    default: 'user'
+    default: 'user',
   },
   picture: {
     type: String,
-    trim: true
-  }
+    trim: true,
+  },
 }, {
-  timestamps: true
+  timestamps: true,
 });
 
-userSchema.path('email').set(function (email) {
+userSchema.path('email').set(function path(email) {
   if (!this.picture || this.picture.indexOf('https://gravatar.com') === 0) {
     const hash = crypto.createHash('md5').update(email).digest('hex');
-    this.picture = `https://gravatar.com/avatar/${hash}?d=identicon`
+    this.picture = `https://gravatar.com/avatar/${hash}?d=identicon`;
   }
 
   if (!this.name) {
-    this.name = email.replace(/^(.+)@.+$/, '$1')
+    this.name = email.replace(/^(.+)@.+$/, '$1');
   }
 
-  return email
+  return email;
 });
 
-userSchema.path('password').set(function (password) {
-  return encrypt(password);
-});
+userSchema.path('password').set(password => encrypt(password));
 
-userSchema.path('password').get(function (password) {
-  return decrypt(password);
-});
+userSchema.path('password').get(password => decrypt(password));
 
 userSchema.methods = {
-  view (full) {
-    let view = {};
+  view(full) {
+    const view = {};
     let fields = ['email', 'name', 'picture'];
 
     if (full) {
-      fields = [...fields, 'createdAt', 'id']
+      fields = [...fields, 'createdAt', 'id'];
     }
 
-    fields.forEach((field) => { view[field] = this[field] });
+    fields.forEach((field) => { view[field] = this[field]; });
 
-    return view
-  }};
+    return view;
+  },
+};
 
 userSchema.statics = {
   roles,
 
-  createFromService ({ service, id, email, name, picture }) {
+  createFromService({
+    service, id, email, name, picture,
+  }) {
     return this.findOne({ $or: [{ [`services.${service}`]: id }, { email }] }).then((user) => {
       if (user) {
-        user.services[service] = id;
-        user.name = name;
-        user.picture = picture;
-        return user.save()
-      } else {
-        return this.create({ services: { [service]: id }, email, name, picture })
+        const userFromService = this(user);
+        userFromService.services[service] = id;
+        userFromService.name = name;
+        userFromService.picture = picture;
+        return userFromService.save();
       }
-    })
-  }
+      return this.create({
+        services: { [service]: id }, email, name, picture,
+      });
+    });
+  },
 };
 
 userSchema.plugin(mongooseKeywords, { paths: ['email', 'name'] });
 
 const model = mongoose.model('User', userSchema);
 
-export const schema = model.schema;
-export default model
+export const { schema } = model;
+export default model;

@@ -1,6 +1,6 @@
-import { Router } from 'express'
-import { register, login } from './controller'
-import { github } from '../../services/passport'
+import { Router } from 'express';
+import { register, login } from './controller';
+import { github } from '../../services/passport';
 
 const router = new Router();
 
@@ -13,11 +13,13 @@ const router = new Router();
  * @apiSuccess (Success 201) {Object} user Current user's data.
  * @apiError 401 Invalid credentials.
  */
-router.post('/github',
+router.post(
+  '/github',
   github(),
-  login);
+  login,
+);
 
 router.post('/register', register);
 router.post('/login', login);
 
-export default router
+export default router;
