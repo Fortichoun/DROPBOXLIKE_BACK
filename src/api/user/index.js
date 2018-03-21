@@ -3,8 +3,8 @@ import { middleware as query } from 'querymen'
 import { middleware as body } from 'bodymen'
 import { master, token } from '../../services/passport'
 import { index, showMe, show, create, update, destroy } from './controller'
-import { schema } from './model'
-export User, { schema } from './model'
+import { schema } from '../../models/user.js'
+// export User, { schema } from './model'
 
 const router = new Router()
 const { email, name, picture, role } = schema.tree

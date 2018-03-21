@@ -1,6 +1,5 @@
 import { Router } from 'express'
-import { login } from './controller'
-import { register } from './controller'
+import { register, login } from './controller'
 import { github } from '../../services/passport'
 
 const router = new Router();
@@ -18,6 +17,7 @@ router.post('/github',
   github(),
   login);
 
-router.post('/auth/register', register);
+router.post('/register', register);
+router.post('/login', login);
 
 export default router

@@ -13,7 +13,7 @@ npm test # test using Jest
 npm run test:unit # run unit tests
 npm run test:integration # run integration tests
 npm run coverage # test and open the coverage report in the browser
-npm run lint # lint using ESLint
+npm run lint # lint using ESLint  
 npm run dev # run the API in development mode
 npm run prod # run the API in production mode
 npm run docs # generate API docs
@@ -145,8 +145,8 @@ src/
 │  │  ├─ controller.js
 │  │  ├─ index.js
 │  │  ├─ index.test.js
-│  │  ├─ model.js
-│  │  └─ model.test.js
+│  │  ├─ user.js
+│  │  └─ user.test.js
 │  └─ index.js
 ├─ services/
 │  ├─ express/
@@ -164,7 +164,7 @@ src/
 
 Here is where the API endpoints are defined. Each API has its own folder.
 
-#### src/api/some-endpoint/model.js
+#### src/api/some-endpoint/user.js
 
 It defines the Mongoose schema and model for the API endpoint. Any changes to the data model should be done here.
 

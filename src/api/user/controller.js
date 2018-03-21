@@ -1,5 +1,5 @@
 import { success, notFound } from '../../services/response/'
-import { User } from '.'
+import { User } from '../../models/user.js'
 
 export const index = ({ querymen: { query, select, cursor } }, res, next) =>
   User.find(query, select, cursor)
@@ -32,7 +32,7 @@ export const create = ({ bodymen: { body } }, res, next) =>
       } else {
         next(err)
       }
-    })
+    });
 
 export const update = ({ bodymen: { body }, params, user }, res, next) =>
   User.findById(params.id === 'me' ? user.id : params.id)

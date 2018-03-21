@@ -7,11 +7,11 @@ const requireProcessEnv = (name) => {
     throw new Error('You must set the ' + name + ' environment variable')
   }
   return process.env[name]
-}
+};
 
 /* istanbul ignore next */
 if (process.env.NODE_ENV !== 'production') {
-  const dotenv = require('dotenv-safe')
+  const dotenv = require('dotenv-safe');
   dotenv.load({
     path: path.join(__dirname, '../.env'),
     sample: path.join(__dirname, '../.env.example')

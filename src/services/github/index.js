@@ -7,7 +7,7 @@ const userRequest = (accessToken) => request({
   qs: {
     access_token: accessToken
   }
-})
+});
 
 const emailRequest = (accessToken) => request({
   uri: 'https://api.github.com/user/emails',
@@ -15,7 +15,7 @@ const emailRequest = (accessToken) => request({
   qs: {
     access_token: accessToken
   }
-})
+});
 
 export const getUser = (accessToken) =>
   Promise.all([userRequest(accessToken), emailRequest(accessToken)])
@@ -25,4 +25,4 @@ export const getUser = (accessToken) =>
       name: responseOfUserReq.login,
       email: responseOfEmailReq[0].email,
       picture: responseOfUserReq.avatar_url
-    }))
+    }));

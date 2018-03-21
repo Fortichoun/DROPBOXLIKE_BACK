@@ -1,8 +1,9 @@
 import crypto from 'crypto'
 import mongoose, { Schema } from 'mongoose'
 import mongooseKeywords from 'mongoose-keywords'
+import { encrypt, decrypt } from '../utils/cryptoTools'
 
-const roles = ['user', 'admin']
+const roles = ['user', 'admin'];
 
 const userSchema = new Schema({
   email: {
@@ -18,6 +19,7 @@ const userSchema = new Schema({
     index: true,
     trim: true
   },
+  password: String,
   services: {
     github: String
   },
@@ -32,11 +34,11 @@ const userSchema = new Schema({
   }
 }, {
   timestamps: true
-})
+});
 
 userSchema.path('email').set(function (email) {
   if (!this.picture || this.picture.indexOf('https://gravatar.com') === 0) {
-    const hash = crypto.createHash('md5').update(email).digest('hex')
+    const hash = crypto.createHash('md5').update(email).digest('hex');
     this.picture = `https://gravatar.com/avatar/${hash}?d=identicon`
   }
 
@@ -45,21 +47,29 @@ userSchema.path('email').set(function (email) {
   }
 
   return email
-})
+});
+
+userSchema.path('password').set(function (password) {
+  return encrypt(password);
+});
+
+userSchema.path('password').get(function (password) {
+  return decrypt(password);
+});
 
 userSchema.methods = {
   view (full) {
-    let view = {}
-    let fields = ['id', 'name', 'picture']
+    let view = {};
+    let fields = ['email', 'name', 'picture'];
 
     if (full) {
-      fields = [...fields, 'email', 'createdAt']
+      fields = [...fields, 'createdAt', 'id']
     }
 
-    fields.forEach((field) => { view[field] = this[field] })
+    fields.forEach((field) => { view[field] = this[field] });
 
     return view
-  }}
+  }};
 
 userSchema.statics = {
   roles,
@@ -67,20 +77,20 @@ userSchema.statics = {
   createFromService ({ service, id, email, name, picture }) {
     return this.findOne({ $or: [{ [`services.${service}`]: id }, { email }] }).then((user) => {
       if (user) {
-        user.services[service] = id
-        user.name = name
-        user.picture = picture
+        user.services[service] = id;
+        user.name = name;
+        user.picture = picture;
         return user.save()
       } else {
         return this.create({ services: { [service]: id }, email, name, picture })
       }
     })
   }
-}
+};
 
-userSchema.plugin(mongooseKeywords, { paths: ['email', 'name'] })
+userSchema.plugin(mongooseKeywords, { paths: ['email', 'name'] });
 
-const model = mongoose.model('User', userSchema)
+const model = mongoose.model('User', userSchema);
 
-export const schema = model.schema
+export const schema = model.schema;
 export default model

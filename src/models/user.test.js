@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { User } from '.'
+import { User } from './user'
 
 let user
 
