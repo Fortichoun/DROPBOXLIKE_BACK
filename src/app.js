@@ -1,11 +1,13 @@
 import http from 'http';
 import Grid from 'gridfs-stream';
+import cors from 'cors';
 import { env, mongo, port, ip, apiRoot } from './config';
 import mongoose from './services/mongoose';
 import express from './services/express';
 import api from './api';
 
 const app = express(apiRoot, api);
+app.use(cors());
 const server = http.createServer(app);
 
 const conn = mongoose.connect(mongo.uri, { useMongoClient: true });

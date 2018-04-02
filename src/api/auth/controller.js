@@ -8,10 +8,10 @@ export const login = ({ body }, res, next) =>
   }, (err, user) => {
     if (err) throw err;
     if (!user) {
-      return res.status(401).json({ message: 'Authentication failed. User not found.' });
+      return res.json({ status: 'NOTFOUND', message: 'Authentication failed. User not found.' });
     }
     if (user.password !== body.password) {
-      return res.status(401).json({ message: 'Authentication failed. Wrong password.' });
+      return res.json({ status: 'BADPASS', message: 'Authentication failed. Wrong password.' });
     }
     return sign(user)
       .then(token => ({ token, user: user.view() }))
