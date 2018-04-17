@@ -15,7 +15,7 @@ export const show = ({ params }, res, next) =>
     .catch(next);
 
 export const showMe = ({ user }, res) =>
-  res.json(user.view(true));
+  res.json(user.view());
 
 export const create = ({ bodymen: { body } }, res, next) =>
   User.create(body)

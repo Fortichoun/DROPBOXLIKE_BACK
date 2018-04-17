@@ -1,6 +1,10 @@
+// eslint-disable-next-line
+import fse from 'fs-extra';
 import { sign } from '../../services/jwt';
 import { success } from '../../services/response/';
 import User from '../../models/user';
+
+const rootPath = 'D:/SupFiles';
 
 export const login = ({ body }, res, next) =>
   User.findOne({
@@ -20,8 +24,13 @@ export const login = ({ body }, res, next) =>
 
 export const register = ({ body }, res, next) =>
   User.create(body)
-    .then(user => user.view(true))
-    .then(success(res, 201))
+    .then((user) => {
+      const fullPath = (`${rootPath}/${user.folderName}`);
+      fse.ensureDir(fullPath);
+      return sign(user)
+        .then(token => ({ token, user: user.view() }))
+        .then(success(res, 201));
+    })
     .catch((err) => {
       /* istanbul ignore else */
       if (err.name === 'MongoError' && err.code === 11000) {

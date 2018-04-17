@@ -23,6 +23,7 @@ const userSchema = new Schema({
   services: {
     github: String,
   },
+  folderName: String,
   role: {
     type: String,
     enum: roles,
@@ -42,9 +43,7 @@ userSchema.path('email').set(function path(email) {
     this.picture = `https://gravatar.com/avatar/${hash}?d=identicon`;
   }
 
-  if (!this.name) {
-    this.name = email.replace(/^(.+)@.+$/, '$1');
-  }
+  this.folderName = email.replace(/^(.+)@.+$/, '$1') + crypto.randomBytes(20).toString('hex');
 
   return email;
 });
@@ -56,7 +55,7 @@ userSchema.path('password').get(password => decrypt(password));
 userSchema.methods = {
   view(full) {
     const view = {};
-    let fields = ['email', 'name', 'picture'];
+    let fields = ['email', 'folderName', 'picture'];
 
     if (full) {
       fields = [...fields, 'createdAt', 'id'];

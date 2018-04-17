@@ -7,7 +7,7 @@ import { schema } from '../../models/user';
 
 const router = new Router();
 const {
-  email, name, picture, role,
+  email, folderName, picture, role,
 } = schema.tree;
 
 /**
@@ -74,7 +74,7 @@ router.post(
   '/',
   master(),
   body({
-    email, name, picture, role,
+    email, folderName, picture, role,
   }),
   create,
 );
@@ -95,7 +95,7 @@ router.post(
 router.put(
   '/:id',
   token({ required: true }),
-  body({ name, picture }),
+  body({ picture }),
   update,
 );
 

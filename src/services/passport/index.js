@@ -11,9 +11,9 @@ export const github = () =>
 export const master = () =>
   passport.authenticate('master', { session: false });
 
-export const token = ({ required, roles = User.roles } = {}) => (req, res, next) =>
+export const token = ({ required } = {}) => (req, res, next) =>
   passport.authenticate('token', { session: false }, (error, user) => {
-    if (error || (required && !user) || (required && !roles.indexOf(user.role))) {
+    if (error || (required && !user)) {
       return res.status(401).end();
     }
     return req.logIn(user, { session: false }, (err) => {
