@@ -6,6 +6,7 @@ import fse from 'fs-extra';
 import fs from 'fs';
 import getSize from 'get-folder-size';
 import archiver from 'archiver';
+var mime = require('mime-types')
 import { mongo } from '../../config';
 import mongoose from '../../services/mongoose';
 
@@ -42,12 +43,22 @@ router.post('/upload', upload.array('file', 12), async (req, res) => {
 
 router.get('/allFiles', (req, res) => {
   const filesInDirectory = [];
-  const fullPath = `${rootPath}/${req.query.userFolder}/${req.query.path}`;
+  const fullPath = req.query.path ?
+    `${rootPath}/${req.query.userFolder}/${req.query.path}` :
+    `${rootPath}/${req.query.userFolder}`;
   fs.readdir(fullPath, (err, files) => {
     if (files) {
       files.forEach((file) => {
+        let imageBuffer = '';
+        let isVideo = false;
+        if (mime.lookup(file) && mime.lookup(file).includes('image')) {
+          imageBuffer = new Buffer(fs.readFileSync(`${fullPath}/${file}`)).toString("base64");
+        }
+        if (mime.lookup(file) && mime.lookup(file).includes('video')) {
+          isVideo = true;
+        }
         const isFolder = fs.statSync(`${fullPath}/${file}`).isDirectory();
-        filesInDirectory.push({ filename: file, isFolder });
+        filesInDirectory.push({ filename: file, isFolder, imageBuffer, isVideo });
       });
       return res.json(filesInDirectory);
     }
@@ -132,10 +143,11 @@ router.post('/rename', (req, res, next) => {
     `${rootPath}/${req.body.userFolder}/${req.body.path}` :
     `${rootPath}/${req.body.userFolder}`;
   const fileToRename = `${fullPath}/${req.body.filename}`;
-  const fileExtension = req.body.filename.split('.').slice(1).join('.');
-  const fileRenamed = fileExtension ?
-    `${fullPath}/${req.body.newFileName}.${fileExtension}` :
-    `${fullPath}/${req.body.newFileName}`;
+  // const fileExtension = req.body.filename.split('.').slice(1).join('.');
+  // const fileRenamed = fileExtension ?
+  //   `${fullPath}/${req.body.newFileName}.${fileExtension}` :
+  //   `${fullPath}/${req.body.newFileName}`;
+  const fileRenamed = `${fullPath}/${req.body.newFileName}`;
   fse.move(fileToRename, fileRenamed)
     .then(() => res.json({ result: 'SUCCESS' }))
     .catch((err) => {
@@ -144,4 +156,38 @@ router.post('/rename', (req, res, next) => {
     });
 });
 
+router.get('/video', (req, res, next) => {
+  console.log('req.query', req.query);
+  const fullPath = req.query.path ?
+    `${rootPath}/${req.query.userFolder}/${req.query.path}` :
+    `${rootPath}/${req.query.userFolder}`;
+  const path = `${fullPath}/${req.query.videoName}`;
+  const stat = fs.statSync(path);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+  if (range) {
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+    const end = parts[1]
+      ? parseInt(parts[1], 10)
+      : fileSize-1;
+    const chunksize = (end-start)+1;
+    const file = fs.createReadStream(path, {start, end});
+    const head = {
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunksize,
+      'Content-Type': 'video/mp4',
+    };
+    res.writeHead(206, head);
+    file.pipe(res);
+  } else {
+    const head = {
+      'Content-Length': fileSize,
+      'Content-Type': 'video/mp4',
+    };
+    res.writeHead(200, head);
+    fs.createReadStream(path).pipe(res)
+  }
+});
 export default router;
