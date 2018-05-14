@@ -14,11 +14,17 @@ const userSchema = new Schema({
     trim: true,
     lowercase: true,
   },
+  isEmailConfirmed: {
+    type: Boolean,
+    default: false,
+  },
+  urlToConfirm: String,
   name: {
     type: String,
     index: true,
     trim: true,
   },
+  username: String,
   password: String,
   services: {
     github: String,
@@ -55,7 +61,7 @@ userSchema.path('password').get(password => decrypt(password));
 userSchema.methods = {
   view(full) {
     const view = {};
-    let fields = ['email', 'folderName', 'picture'];
+    let fields = ['email', 'username', 'folderName', 'isEmailConfirmed'];
 
     if (full) {
       fields = [...fields, 'createdAt', 'id'];

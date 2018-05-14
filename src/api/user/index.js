@@ -2,8 +2,10 @@ import { Router } from 'express';
 import { middleware as query } from 'querymen';
 import { middleware as body } from 'bodymen';
 import { master, token } from '../../services/passport';
-import { index, showMe, show, create, update, destroy } from './controller';
+import { index, showMe, show, create, update, destroy, confirmEmail } from './controller';
 import { schema } from '../../models/user';
+import { User } from "../../models/user";
+
 
 const router = new Router();
 const {
@@ -114,5 +116,11 @@ router.delete(
   token({ required: true, roles: ['admin'] }),
   destroy,
 );
+
+router.post(
+  '/confirmEmail',
+  confirmEmail,
+);
+
 
 export default router;

@@ -6,9 +6,13 @@ import fse from 'fs-extra';
 import fs from 'fs';
 import getSize from 'get-folder-size';
 import archiver from 'archiver';
-var mime = require('mime-types')
+import mime from 'mime-types'
+import crypto from 'crypto';
 import { mongo } from '../../config';
 import mongoose from '../../services/mongoose';
+import Link from '../../models/link';
+import {notFound, success} from "../../services/response";
+import User from "../../models/user";
 
 const router = new Router();
 const rootPath = 'D:/SupFiles';
@@ -41,12 +45,16 @@ router.post('/upload', upload.array('file', 12), async (req, res) => {
   res.json({ files: req.files });
 });
 
-router.get('/allFiles', (req, res) => {
+router.get('/allFiles', (req, res, next) => {
   const filesInDirectory = [];
   const fullPath = req.query.path ?
     `${rootPath}/${req.query.userFolder}/${req.query.path}` :
     `${rootPath}/${req.query.userFolder}`;
   fs.readdir(fullPath, (err, files) => {
+    if(err) {
+      next(err);
+      return res.json({ result: 'ERROR' });
+    }
     if (files) {
       files.forEach((file) => {
         let imageBuffer = '';
@@ -81,7 +89,13 @@ router.post('/download', (req, res) => {
     `${rootPath}/${req.body.userFolder}`;
   const file = `${fullPath}/${req.body.filename}`;
   if (!req.body.isFolder) {
-    return res.download(file);
+    console.log('download');
+    console.log('filename', req.body.filename);
+    console.log('file', file);
+    res.set(`Content-Disposition`, `attachment; filename=${req.body.filename}`);
+    res.attachment(file);
+    res.set(`Content-Type`, `application/octet-stream`);
+    return res.download(file, req.body.filename);
   }
   const archive = archiver('zip');
 
@@ -94,7 +108,7 @@ router.post('/download', (req, res) => {
     console.log('Archive wrote %d bytes', archive.pointer());
   });
 
-  res.attachment('archive-name.zip');
+  res.attachment('download.zip');
   archive.pipe(res);
 
   archive.directory(file, req.body.filename);
@@ -103,9 +117,41 @@ router.post('/download', (req, res) => {
   return archive.finalize();
 });
 
+router.post('/download', (req, res, next) => {
+  const fullPath = req.body.path ?
+    `${rootPath}/${req.body.userFolder}/${req.body.path}` :
+    `${rootPath}/${req.body.userFolder}`;
+  const file = `${fullPath}/${req.body.filename}`;
+  if (!req.body.isFolder) {
+    res.download(file, req.body.filename);
+    next();
+  } else {
+
+  const archive = archiver('zip');
+
+  archive.on('error', (err) => {
+    res.status(500).send({ error: err.message });
+  });
+
+  // on stream closed we can end the request
+  archive.on('end', () => {
+    console.log('Archive wrote %d bytes', archive.pointer());
+  });
+
+  res.attachment('download.zip');
+  archive.pipe(res);
+
+  archive.directory(file, req.body.filename);
+
+
+  return archive.finalize();
+  }
+});
+
 router.post('/newFolder', (req, res, next) => {
   const fullPath = `${rootPath}/${req.body.userFolder}/${req.body.path}`;
   const folder = `${fullPath}/${req.body.folderName}`;
+  console.log('folder', folder);
   fse.ensureDir(folder, (err) => {
     if (err) return next(err);
     return res.json({ result: 'SUCCESS' });
@@ -157,7 +203,6 @@ router.post('/rename', (req, res, next) => {
 });
 
 router.get('/video', (req, res, next) => {
-  console.log('req.query', req.query);
   const fullPath = req.query.path ?
     `${rootPath}/${req.query.userFolder}/${req.query.path}` :
     `${rootPath}/${req.query.userFolder}`;
@@ -190,4 +235,54 @@ router.get('/video', (req, res, next) => {
     fs.createReadStream(path).pipe(res)
   }
 });
+
+router.post('/shared', (req, res, next) => {
+  const fullPath = req.body.path ?
+    `${rootPath}/${req.body.userFolder}/${req.body.path}` :
+    `${rootPath}/${req.body.userFolder}`;
+  const filePath = `${fullPath}/${req.body.filename}`;
+
+  crypto.createHash('md5').update('secret hash').digest('hex');
+  const hash = crypto.randomBytes(26).toString('hex');
+  console.log('newHash', hash);
+
+  Link.create({hash, filePath, filename: req.body.filename}, function (error, link) {
+    if (error) {
+      return res.json({ result: 'ERROR' });
+    }
+    console.log('hey! ', link);
+    return res.json({ linkHash: link.hash });
+  });
+});
+
+router.get('/getSharedFile/:id', ({ params }, res, next) => {
+  Link.findOne({hash: params.id }, function(error, link) {
+    if (error || !link) {
+      return res.status(403).json({ status: 'NOTFOUND', message: 'This link doesn\'t exist' });
+    }
+    if (!fs.statSync(link.filePath).isDirectory()) {
+      return res.download(link.filePath);
+    } else {
+
+      const archive = archiver('zip');
+
+      archive.on('error', (err) => {
+        res.status(500).send({ error: err.message });
+      });
+
+      // on stream closed we can end the request
+      archive.on('end', () => {
+        console.log('Archive wrote %d bytes', archive.pointer());
+      });
+
+      res.attachment('download.zip');
+      archive.pipe(res);
+
+      archive.directory(link.filePath, link.filename);
+
+      return archive.finalize();
+    }
+  }).catch(next)
+});
+
 export default router;

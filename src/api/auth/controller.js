@@ -1,5 +1,7 @@
 // eslint-disable-next-line
 import fse from 'fs-extra';
+import nodemailer from 'nodemailer'
+import crypto from 'crypto'
 import { sign } from '../../services/jwt';
 import { success } from '../../services/response/';
 import User from '../../models/user';
@@ -22,14 +24,45 @@ export const login = ({ body }, res, next) =>
       .then(success(res, 201));
   }).catch(next);
 
-export const register = ({ body }, res, next) =>
-  User.create(body)
+export const register = (req, res, next) =>
+  User.create(req.body)
     .then((user) => {
       const fullPath = (`${rootPath}/${user.folderName}`);
+      console.log('req', req.get('origin'));
+      crypto.createHash('md5').update('secret hash').digest('hex');
+      const hash = crypto.randomBytes(26).toString('hex');
+      const urlToConfirm = `${req.get('origin')}/confirmEmail/${hash}`;
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'supfiles.no.reply@gmail.com',
+          pass: '#SupFiles!'
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+      const mailOptions = {
+        from: 'supfiles.no.reply@gmail.com',
+        to: user.email,
+        subject: 'Please confirm your address email',
+        text: `Welcome to SupFiles !\nPlease click on this link to confirm your address email :\n${urlToConfirm}`
+      };
+
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
       fse.ensureDir(fullPath);
-      return sign(user)
+      user.urlToConfirm = hash;
+      user.save().then(() =>
+      sign(user)
         .then(token => ({ token, user: user.view() }))
-        .then(success(res, 201));
+        .then(success(res, 201))
+      );
     })
     .catch((err) => {
       /* istanbul ignore else */

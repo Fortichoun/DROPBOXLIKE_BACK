@@ -1,5 +1,6 @@
 import { success, notFound } from '../../services/response/';
-import { User } from '../../models/user';
+import User from '../../models/user';
+import {sign} from "../../services/jwt";
 
 export const index = ({ querymen: { query, select, cursor } }, res, next) =>
   User.find(query, select, cursor)
@@ -60,4 +61,14 @@ export const destroy = ({ params }, res, next) =>
     .then(notFound(res))
     .then(user => (user ? user.remove() : null))
     .then(success(res, 204))
+    .catch(next);
+
+export const confirmEmail = ({ body: { hash } }, res, next) =>
+  User.findOne({urlToConfirm: hash})
+    .then(notFound(res))
+    .then(user => (user ? Object.assign(user, { isEmailConfirmed: true }).save() : null))
+    .then(userSaved => (userSaved ? sign(userSaved)
+        .then(token => ({ token, user: userSaved.view() }))
+        .then(success(res, 201))
+        : null))
     .catch(next);

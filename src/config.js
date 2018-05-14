@@ -14,7 +14,7 @@ const requireProcessEnv = (name) => {
 if (process.env.NODE_ENV !== 'production') {
   dotenv.load({
     path: path.join(__dirname, '../.env'),
-    // sample: path.join(__dirname, '../.env.example'),
+    sample: path.join(__dirname, '../.env.example'),
   });
 }
 
@@ -52,7 +52,7 @@ const config = {
     },
   },
   production: {
-    ip: process.env.IP || undefined,
+    ip: process.env.IP || 'localhost',
     port: process.env.PORT || 8080,
     mongo: {
       uri: process.env.MONGODB_URI || 'mongodb://localhost/back-4-pjt',
