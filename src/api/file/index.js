@@ -89,9 +89,6 @@ router.post('/download', (req, res) => {
     `${rootPath}/${req.body.userFolder}`;
   const file = `${fullPath}/${req.body.filename}`;
   if (!req.body.isFolder) {
-    console.log('download');
-    console.log('filename', req.body.filename);
-    console.log('file', file);
     res.set(`Content-Disposition`, `attachment; filename=${req.body.filename}`);
     res.attachment(file);
     res.set(`Content-Type`, `application/octet-stream`);
@@ -117,36 +114,36 @@ router.post('/download', (req, res) => {
   return archive.finalize();
 });
 
-router.post('/download', (req, res, next) => {
-  const fullPath = req.body.path ?
-    `${rootPath}/${req.body.userFolder}/${req.body.path}` :
-    `${rootPath}/${req.body.userFolder}`;
-  const file = `${fullPath}/${req.body.filename}`;
-  if (!req.body.isFolder) {
-    res.download(file, req.body.filename);
-    next();
-  } else {
-
-  const archive = archiver('zip');
-
-  archive.on('error', (err) => {
-    res.status(500).send({ error: err.message });
-  });
-
-  // on stream closed we can end the request
-  archive.on('end', () => {
-    console.log('Archive wrote %d bytes', archive.pointer());
-  });
-
-  res.attachment('download.zip');
-  archive.pipe(res);
-
-  archive.directory(file, req.body.filename);
-
-
-  return archive.finalize();
-  }
-});
+// router.post('/download', (req, res, next) => {
+//   const fullPath = req.body.path ?
+//     `${rootPath}/${req.body.userFolder}/${req.body.path}` :
+//     `${rootPath}/${req.body.userFolder}`;
+//   const file = `${fullPath}/${req.body.filename}`;
+//   if (!req.body.isFolder) {
+//     res.download(file, req.body.filename);
+//     next();
+//   } else {
+//
+//   const archive = archiver('zip');
+//
+//   archive.on('error', (err) => {
+//     res.status(500).send({ error: err.message });
+//   });
+//
+//   // on stream closed we can end the request
+//   archive.on('end', () => {
+//     console.log('Archive wrote %d bytes', archive.pointer());
+//   });
+//
+//   res.attachment('download.zip');
+//   archive.pipe(res);
+//
+//   archive.directory(file, req.body.filename);
+//
+//
+//   return archive.finalize();
+//   }
+// });
 
 router.post('/newFolder', (req, res, next) => {
   const fullPath = `${rootPath}/${req.body.userFolder}/${req.body.path}`;
@@ -165,8 +162,8 @@ router.get('/folderSize', (req, res, next) => {
       next(err);
     }
     console.log(`${size} bytes`);
-    console.log(`${(size / 1024 / 1024).toFixed(2)} MB`);
-    res.json({ folderSize: size });
+    console.log(`${(size / 1024 / 1024 / 1024).toFixed(5)} GB`);
+    res.json({ folderSize: size});
   });
 });
 

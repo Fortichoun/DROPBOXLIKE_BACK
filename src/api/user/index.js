@@ -9,7 +9,7 @@ import { User } from "../../models/user";
 
 const router = new Router();
 const {
-  email, folderName, picture, role,
+  email, folderName, picture, role, username,
 } = schema.tree;
 
 /**
@@ -97,7 +97,7 @@ router.post(
 router.put(
   '/:id',
   token({ required: true }),
-  body({ picture }),
+  body({ username }),
   update,
 );
 

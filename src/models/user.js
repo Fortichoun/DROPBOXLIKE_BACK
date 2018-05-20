@@ -61,10 +61,10 @@ userSchema.path('password').get(password => decrypt(password));
 userSchema.methods = {
   view(full) {
     const view = {};
-    let fields = ['email', 'username', 'folderName', 'isEmailConfirmed'];
+    let fields = ['email', 'username', 'folderName', 'isEmailConfirmed', 'id'];
 
     if (full) {
-      fields = [...fields, 'createdAt', 'id'];
+      fields = [...fields, 'createdAt'];
     }
 
     fields.forEach((field) => { view[field] = this[field]; });

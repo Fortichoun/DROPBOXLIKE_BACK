@@ -28,7 +28,6 @@ export const register = (req, res, next) =>
   User.create(req.body)
     .then((user) => {
       const fullPath = (`${rootPath}/${user.folderName}`);
-      console.log('req', req.get('origin'));
       crypto.createHash('md5').update('secret hash').digest('hex');
       const hash = crypto.randomBytes(26).toString('hex');
       const urlToConfirm = `${req.get('origin')}/confirmEmail/${hash}`;
@@ -76,3 +75,39 @@ export const register = (req, res, next) =>
         next(err);
       }
     });
+
+export const googleLogin = ({ body }, res, next) =>
+  User.findOne({
+    email: body.email,
+  }, (err, user) => {
+    if (err) throw err;
+    if (!user) {
+      User.create(body)
+        .then((user) => {
+          const fullPath = (`${rootPath}/${user.folderName}`);
+          fse.ensureDir(fullPath);
+          user.isEmailConfirmed = true;
+          user.save().then(() =>
+            sign(user)
+              .then(token => ({ token, user: user.view() }))
+              .then(success(res, 201))
+          );
+        })
+        .catch((err) => {
+          /* istanbul ignore else */
+          if (err.name === 'MongoError' && err.code === 11000) {
+            res.status(409).json({
+              valid: false,
+              param: 'email',
+              message: 'email already registered',
+            });
+          } else {
+            next(err);
+          }
+        });
+    } else {
+      return sign(user)
+        .then(token => ({ token, user: user.view() }))
+        .then(success(res, 201));
+    }
+  }).catch(next);

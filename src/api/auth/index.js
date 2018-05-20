@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login } from './controller';
+import { register, login, googleLogin } from './controller';
 import { github } from '../../services/passport';
 
 const router = new Router();
@@ -21,5 +21,6 @@ router.post(
 
 router.post('/register', register);
 router.post('/login', login);
+router.post('/googleLogin', googleLogin);
 
 export default router;
