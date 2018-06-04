@@ -9,7 +9,7 @@ import { User } from "../../models/user";
 
 const router = new Router();
 const {
-  email, folderName, picture, role, username,
+  email, folderName, picture, role, username, password,
 } = schema.tree;
 
 /**
@@ -88,7 +88,6 @@ router.post(
  * @apiPermission user
  * @apiParam {String} access_token User access_token.
  * @apiParam {String} [name] User's name.
- * @apiParam {String} [picture] User's picture.
  * @apiSuccess {Object} user User's data.
  * @apiError {Object} 400 Some parameters may contain invalid values.
  * @apiError 401 Current user or admin access only.
@@ -97,7 +96,6 @@ router.post(
 router.put(
   '/:id',
   token({ required: true }),
-  body({ username }),
   update,
 );
 

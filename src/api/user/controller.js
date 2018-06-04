@@ -35,7 +35,7 @@ export const create = ({ bodymen: { body } }, res, next) =>
       }
     });
 
-export const update = ({ bodymen: { body }, params, user }, res, next) =>
+export const update = ({ body, params, user }, res, next) =>
   User.findById(params.id === 'me' ? user.id : params.id)
     .then(notFound(res))
     .then((result) => {

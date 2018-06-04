@@ -87,6 +87,7 @@ export const googleLogin = ({ body }, res, next) =>
           const fullPath = (`${rootPath}/${user.folderName}`);
           fse.ensureDir(fullPath);
           user.isEmailConfirmed = true;
+          user.isGoogle = true;
           user.save().then(() =>
             sign(user)
               .then(token => ({ token, user: user.view() }))

@@ -18,6 +18,10 @@ const userSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  isGoogle: {
+    type: Boolean,
+    default: false,
+  },
   urlToConfirm: String,
   name: {
     type: String,
@@ -61,7 +65,7 @@ userSchema.path('password').get(password => decrypt(password));
 userSchema.methods = {
   view(full) {
     const view = {};
-    let fields = ['email', 'username', 'folderName', 'isEmailConfirmed', 'id'];
+    let fields = ['email', 'username', 'folderName', 'isEmailConfirmed', 'id', 'isGoogle'];
 
     if (full) {
       fields = [...fields, 'createdAt'];

@@ -11,8 +11,6 @@ import crypto from 'crypto';
 import { mongo } from '../../config';
 import mongoose from '../../services/mongoose';
 import Link from '../../models/link';
-import {notFound, success} from "../../services/response";
-import User from "../../models/user";
 
 const router = new Router();
 const rootPath = 'D:/SupFiles';
@@ -114,44 +112,19 @@ router.post('/download', (req, res) => {
   return archive.finalize();
 });
 
-// router.post('/download', (req, res, next) => {
-//   const fullPath = req.body.path ?
-//     `${rootPath}/${req.body.userFolder}/${req.body.path}` :
-//     `${rootPath}/${req.body.userFolder}`;
-//   const file = `${fullPath}/${req.body.filename}`;
-//   if (!req.body.isFolder) {
-//     res.download(file, req.body.filename);
-//     next();
-//   } else {
-//
-//   const archive = archiver('zip');
-//
-//   archive.on('error', (err) => {
-//     res.status(500).send({ error: err.message });
-//   });
-//
-//   // on stream closed we can end the request
-//   archive.on('end', () => {
-//     console.log('Archive wrote %d bytes', archive.pointer());
-//   });
-//
-//   res.attachment('download.zip');
-//   archive.pipe(res);
-//
-//   archive.directory(file, req.body.filename);
-//
-//
-//   return archive.finalize();
-//   }
-// });
-
 router.post('/newFolder', (req, res, next) => {
   const fullPath = `${rootPath}/${req.body.userFolder}/${req.body.path}`;
   const folder = `${fullPath}/${req.body.folderName}`;
-  console.log('folder', folder);
-  fse.ensureDir(folder, (err) => {
-    if (err) return next(err);
-    return res.json({ result: 'SUCCESS' });
+  fse.pathExists(folder)
+    .then(exists => {
+      if(!exists) {
+        fse.ensureDir(folder, (err) => {
+          if (err) return next(err);
+          return res.json({ result: 'SUCCESS' });
+        });
+      } else {
+        return res.json({ result: 'FILEEXISTS' })
+      }
   });
 });
 
@@ -173,11 +146,39 @@ router.post('/move', (req, res, next) => {
     `${rootPath}/${req.body.userFolder}`;
   const fileToMove = `${fullPath}/${req.body.sourceFile}`;
   const FolderDestination = `${fullPath}/${req.body.destinationFile}/${req.body.sourceFile}`;
-  fse.move(fileToMove, FolderDestination)
-    .then(() => res.json({ result: 'SUCCESS' }))
-    .catch((err) => {
-      next(err);
-      return res.json({ result: 'ERROR' });
+  fse.pathExists(FolderDestination)
+    .then(exists => {
+      if(!exists) {
+        fse.move(fileToMove, FolderDestination)
+          .then(() => res.json({ result: 'SUCCESS' }))
+          .catch((err) => {
+            next(err);
+            return res.json({ result: 'ERROR' });
+          });
+      } else {
+        return res.json({ result: 'FILEEXISTS' })
+      }
+    });
+});
+
+router.post('/moveBackInFolder', (req, res, next) => {
+  const fullPath = req.body.path ?
+    `${rootPath}/${req.body.userFolder}/${req.body.path}` :
+    `${rootPath}/${req.body.userFolder}`;
+  const fileToMove = `${fullPath}/${req.body.sourceFile}`;
+  const FolderDestination = `${rootPath}/${req.body.userFolder}/${req.body.destinationFile}${req.body.sourceFile}`;
+  fse.pathExists(FolderDestination)
+    .then(exists => {
+      if(!exists) {
+        fse.move(fileToMove, FolderDestination)
+          .then(() => res.json({ result: 'SUCCESS' }))
+          .catch((err) => {
+            next(err);
+            return res.json({ result: 'ERROR' });
+          });
+      } else {
+        return res.json({ result: 'FILEEXISTS' })
+      }
     });
 });
 
@@ -186,16 +187,19 @@ router.post('/rename', (req, res, next) => {
     `${rootPath}/${req.body.userFolder}/${req.body.path}` :
     `${rootPath}/${req.body.userFolder}`;
   const fileToRename = `${fullPath}/${req.body.filename}`;
-  // const fileExtension = req.body.filename.split('.').slice(1).join('.');
-  // const fileRenamed = fileExtension ?
-  //   `${fullPath}/${req.body.newFileName}.${fileExtension}` :
-  //   `${fullPath}/${req.body.newFileName}`;
   const fileRenamed = `${fullPath}/${req.body.newFileName}`;
-  fse.move(fileToRename, fileRenamed)
-    .then(() => res.json({ result: 'SUCCESS' }))
-    .catch((err) => {
-      next(err);
-      return res.json({ result: 'ERROR' });
+  fse.pathExists(fileRenamed)
+    .then(exists => {
+      if(!exists) {
+        fse.move(fileToRename, fileRenamed)
+          .then(() => res.json({ result: 'SUCCESS' }))
+          .catch((err) => {
+            next(err);
+            return res.json({ result: 'ERROR' });
+          });
+      } else {
+        return res.json({ result: 'FILEEXISTS' })
+      }
     });
 });
 
