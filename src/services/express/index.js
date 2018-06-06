@@ -6,6 +6,7 @@ import bodyParser from 'body-parser';
 import { errorHandler as queryErrorHandler } from 'querymen';
 import { errorHandler as bodyErrorHandler } from 'bodymen';
 import { env } from '../../config';
+import app from "../../app";
 
 export default (apiRoot, routes) => {
   const app = express();
@@ -21,6 +22,7 @@ export default (apiRoot, routes) => {
   app.use(apiRoot, routes);
   app.use(queryErrorHandler());
   app.use(bodyErrorHandler());
+  app.use(express.static('public'));
 
   return app;
 };

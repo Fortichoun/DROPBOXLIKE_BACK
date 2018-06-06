@@ -1,6 +1,6 @@
 {
-  "name": "back-4-pjt",
-  "version": "0.0.0",
+  "name": "supfiles-api",
+  "version": "0.1.0",
   "main": "src",
   "private": true,
   "scripts": {

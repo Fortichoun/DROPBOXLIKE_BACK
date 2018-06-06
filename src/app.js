@@ -1,5 +1,4 @@
 import http from 'http';
-import Grid from 'gridfs-stream';
 import cors from 'cors';
 import { env, mongo, port, ip, apiRoot } from './config';
 import mongoose from './services/mongoose';
@@ -10,15 +9,9 @@ const app = express(apiRoot, api);
 app.use(cors());
 const server = http.createServer(app);
 
-const conn = mongoose.connect(mongo.uri, { useMongoClient: true });
+mongoose.connect(mongo.uri, { useMongoClient: true });
 mongoose.Promise = Promise;
 
-let gfs;
-
-conn.once('open', () => {
-  gfs = Grid(conn.db, mongoose.mongo);
-  gfs.collection('uploads');
-});
 
 setImmediate(() => {
   server.listen(port, ip, () => {

@@ -1,0 +1,11 @@
+{
+  "name": "SupFiles",
+  "version": "0.1.0",
+  "description": "API Documentation",
+  "apidoc": {
+    "title": "SupFiles - API Documentation"
+  },
+  "template": {
+    "forceLanguage": "en"
+  }
+}
